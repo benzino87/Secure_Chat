@@ -1,7 +1,8 @@
 /**
  * Initializes app to be a function handler that you can supply to an HTTP server
  * */
-var app = require('express')();
+var express = require('express');
+var app = express();
 var http = require('http').Server(app);
 
 /**
