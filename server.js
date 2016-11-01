@@ -8,7 +8,8 @@ var http = require('http').Server(app);
  * We define a route handler / that gets called when clients hit website home
  * */
 app.get('/', function(req, res){
-  res.sendfile('/client/index.html');
+  //res.send('<h1>HelloWorld<h1>');
+  res.sendfile('client/index.html')
 });
 
 /**
