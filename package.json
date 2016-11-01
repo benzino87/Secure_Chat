@@ -1,0 +1,13 @@
+{
+  "name": "secure-chat",
+  "version": "0.0.1",
+  "description": "A simple chat program that will implement RSA encryption",
+  "main": "server.js",
+  "repository": "",
+  "author": "Jason Bensel",
+  "dependencies": {
+    "async": "~0.2.8",
+    "express": "~3.2.4",
+    "socket.io": "~0.9.14"
+  }
+}
