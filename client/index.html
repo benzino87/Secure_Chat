@@ -1,48 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html Lang="en" ng-app>
 
 <head>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
-    <style>
-        #user-list, #chat-box{
-            height: 100vh;
-            border: 1px solid black;
-        }
-        #dialog{
-            height: 95vh;
-        }
-        #text-field{
-            padding: 2px;
-            margin: 4px;
-            width: 90%;
-        }
-    </style>
+    <title>Secure Chat</title>
+    <!-- Load in CSS libs -->
+    <!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+    <!--<link rel="stylesheet" href="/css/client.css" type="text/css"/>-->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/angular.min.js"></script>
+    <script>
+        //push this to a function that foces user to enter a name before creating
+        //the socket
+        var socket = io.connect();
+        
+        $(document).ready(function(){ 
+            $('form').submit(function(){
+            socket.emit('message to server', $('#message').val());
+            
+            //Clear the text field
+            $('#message').val('');
+            
+            //Return false so post doesn't refresh connection
+            return false;
+            })
+        });
+            
+        
+    </script>
 </head>
 
 <body>
-    <div class="container-fluid" id="chat-wrapper">
-            <div class="col-sm-2">
-                <div class="container-fluid" id="user-list">
-                    <!-- will contain user information -->
-                    <p>User list</p>
-                </div>
-            </div>
-            <div class="col-sm-10">    
-                <div class="container-fluid" id="chat-box">
-                    <!-- chat dialog -->
-                    <div class="row" id="dialog">
-                        <p>chatbox</p>
-                    </div>
-                    <!-- chat box to send -->
-                    <div class="row" id="input">
-                        <form>
-                            <input id="text-field" type="text" name="" />
-                            <input type="submit" value="Submit" />
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+   <ul id="chat-dialog"></ul>
+   <form>
+       <input id='message' type="text" name=""/>
+       <input type="submit" value="Submit"/>
+   </form>
 </body>
 
 </html>

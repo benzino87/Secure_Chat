@@ -1,0 +1,12 @@
+#user-list, #chat-box{
+            height: 100vh;
+            border: 1px solid black;
+        }
+        #dialog{
+            height: 95vh;
+        }
+        #text-field{
+            padding: 2px;
+            margin: 4px;
+            width: 90%;
+        }
