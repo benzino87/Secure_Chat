@@ -57,14 +57,33 @@
 
 
         /**
-         * Receieve chat from server
+         * Listen for general chat broadcasts
          * */
         socket.on('broadcast', function(message) {
-            console.log(message);
-
+            
             $('#chat-dialog').append($('<li>').text(message));
-
+            
         });
+        
+         /**
+         * Listen for whisper
+         * */
+        socket.on('whisper', function(message) {
+            
+            $('#chat-dialog').append($('<li>').text(message).css('color', 'purple'));
+            
+        });
+        
+         /**
+         * Listen for admin messages
+         * */
+        socket.on('admin', function(message) {
+            
+            $('#chat-dialog').append($('<li>').text(message).css('color', 'red'));
+            
+        });
+        
+        
         
         /**
          * Recieve updated user list from server
