@@ -1,43 +1,131 @@
 <!DOCTYPE html>
-<html Lang="en" ng-app>
+<html Lang="en">
 
 <head>
     <title>Secure Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Load in CSS libs -->
     <!--<meta name="viewport" content="width=device-width, initial-scale=1.0">-->
-    <!--<link rel="stylesheet" href="/css/client.css" type="text/css"/>-->
+    <link rel="stylesheet" href="/css/client.css" type="text/css" />
     <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/jquery.min.js"></script>
-    <script src="/js/angular.min.js"></script>
+    <!--<script src="/js/angular.min.js"></script>-->
     <script>
         //push this to a function that foces user to enter a name before creating
         //the socket
+
         var socket = io.connect();
-        
-        $(document).ready(function(){ 
-            $('form').submit(function(){
-            socket.emit('message to server', $('#message').val());
-            
-            //Clear the text field
-            $('#message').val('');
-            
-            //Return false so post doesn't refresh connection
-            return false;
-            })
+
+        $(window).load(function() {
+            $('#main').hide();
         });
-            
+
+        $(document).ready(function() {
+
+            $('#client-name').submit(function() {
+
+                socket.emit('client name', $('#name').val());
+
+                $('#myModal').hide();
+                $('#main').show();
+
+                //Return false so post doesn't refresh connection
+                return false;
+            });
+        });
+
+        /**
+         * Sends basic chat message
+         * 
+         * TODO: add whipser functionality
+         * 
+         * */
+        $(document).ready(function() {
+            $('#chat-form').submit(function() {
+
+                socket.emit('message to server', $('#message').val());
+
+                $('#message').val('');
+
+                //Return false so post doesn't refresh connection
+                return false;
+            });
+
+        });
+
+
+        /**
+         * Receieve chat from server
+         * */
+        socket.on('broadcast', function(message) {
+            console.log(message);
+
+            $('#chat-dialog').append($('<li>').text(message));
+
+        });
         
+        /**
+         * Recieve updated user list from server
+         * */
+        socket.on('updated user list', function(users) {
+
+            $('#user-list').empty();
+
+            var userList = users.split(',');
+            for (var user in userList) {
+                console.log(userList[user]);
+                $('#user-list').append($('<li>').text(userList[user]));
+            }
+        });
     </script>
 </head>
 
 <body>
-   <ul id="chat-dialog"></ul>
-   <form>
-       <input id='message' type="text" name=""/>
-       <input type="submit" value="Submit"/>
-   </form>
+    <div class="container-fluid">
+        <div class="modal" id="myModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Enter your name</h3>
+                    <p>Leave blank for anonymous</p>
+                </div>
+                <div class="modal-body">
+                    <form id="client-name">
+                        <ul>
+                            <li>
+                                <input id="name" type="text" name="" />
+                            </li>
+                            <li>
+                                <input type="submit" value="Submit" />
+                            </li>
+                        </ul>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid" id="main">
+        <div class="row">
+            <div class="span12">
+                <div class+"row">
+                    <ul id="chat-dialog"></ul>
+                </div>
+                <div class="row">
+                    <form id="chat-form">
+                        <input id='message' type="text" name="" />
+                        <input type="submit" value="Submit" />
+                    </form>
+                </div>
+            </div>
+            <div class="span4">
+                <h4>User List</h4>
+                <ul id="user-list"></ul>
+            </div>
+        </div>
+
+    </div>
 </body>
 
 </html>
