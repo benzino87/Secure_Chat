@@ -1,3 +1,71 @@
+body{
+    background-image: url('/img/matrixbg.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+h1, h4{
+    text-align: center;
+}
+.modal{
+    text-align: center;
+    border: none;
+}
+.modal-content{
+    background-color: black;
+    color: lime;
+    border: 2px solid lime;
+    border-radius: 0;
+}
+.modal-content .modal-header{
+    border: 0;
+}
+#client-name input[type=submit]{
+    background-color: black;
+    color:lime;
+    border: 2px solid lime;
+} 
+#client-name input[type=text]{
+    background-color: black;
+    border: 2px solid lime;
+    border-radius: 0;
+    color: lime;
+}     
+
 ul{
     list-style: none;
+}
+body, #main, #chat-log{
+    height: 100vh;
+    color: lime;
+}
+#chat-log-text-area{
+    background-color: black;
+    height: 90vh;
+}
+#users{
+    background-color: black;
+    border: 2px solid lime;
+}
+
+#chat-form{
+    margin: 0;
+
+}
+#chat-form input[type=text]{
+    margin: 0;
+    width: 90%;
+    border: 2px solid lime;
+    border-radius: 0;
+    background-color: black;
+    color: lime;
+
+}
+#chat-form input[type=submit]:hover{
+    background-color: lime;
+    color: black;
+}
+#chat-form input[type=submit]{
+    background-color: black;
+    color: lime;
+    border: 2px solid lime;
 }

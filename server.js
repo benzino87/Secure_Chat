@@ -67,11 +67,19 @@ io.on('connection', function(socket) {
      * */
 
     socket.on('message to server', function(message) {
-
+        
+        var senderName = findSenderSocketInformation(socket);
+        
         //Break apart message and check if its a whisper
         var messageArr = message.split(" ", 2);
+        
+        if(senderName === "admin" && messageArr[0] === '/r'){
+            
+            findAndRemoveClient(socket, messageArr[1]);
+            
+        }
 
-        if (messageArr[0] === '/w') {
+        else if (messageArr[0] === '/w') {
 
             findClientAndSendWhisper(socket, message, messageArr);
 
@@ -246,4 +254,39 @@ function findSenderSocketInformation(senderSocket){
         
     }
     return senderName;
+}
+
+/**
+ * Searches though the list of clients, if found sends admin disconnect message
+ * to client, disconnect the client and update user list.
+ * 
+ * @param {senderSocket}: Admin socket 
+ * 
+ * @param {clientName}: Name of client socket to be disconnected
+ * 
+ * */
+function findAndRemoveClient(senderSocket, clientName){
+    
+    var isFound = false;
+    
+    for (var pos in clients){
+        
+        if(clients[pos].name === clientName){
+            
+            var sockId = clients[pos].socket.id
+            
+            io.sockets.socket(sockId).emit('admin', 'You have been removed');
+            
+            io.sockets.socket(sockId).disconnect();
+            
+            isFound = true;
+            
+            //close this clients connection
+        }
+    }
+    if(!isFound){
+        
+        io.sockets.socket(senderSocket.id).emit('admin', 'No client exists with that name');
+        
+    }
 }
