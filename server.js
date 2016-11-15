@@ -7,20 +7,20 @@ var path = require('path');
 
 var AES = require('crypto-js/aes');
 var SHA256 = require('crypto-js/sha256');
-
-console.log(SHA256("Message"));
-
 var CryptoJS = require("crypto-js");
-console.log(CryptoJS.HmacSHA1("Message", "Key"));
+
 
 
 //Define static content for app to use.
 app.use(express.static('client'));
 
+//Generated public key on server start
 var publicKey = "";
 
+//List of client's name, socket, private key
 var clients = [];
 
+//Number to attach to anonymous users
 var count = 0;
 
 generateRandomKey();
@@ -49,8 +49,6 @@ server.listen(8080, function() {
  * broadcasts to all users that a new user has connected
  * saves client information for user list
  * 
- * TODO: Remove disconnected clients from client list
- * 
  * */
 io.on('connection', function(socket) {
 
@@ -70,6 +68,11 @@ io.on('connection', function(socket) {
 
     });
     
+    /**
+     * 
+     * Receive encrypted private key from client, decrypt and add key to client
+     * 
+     * */
     socket.on('privateKey', function(key) {
         
         console.log(key);
