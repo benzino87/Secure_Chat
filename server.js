@@ -145,8 +145,11 @@ function updateUserList() {
             clientList = clients[i].name;
             
         }
+        else{
 
-        clientList = clientList + ',' + clients[i].name;
+            clientList = clientList + ',' + clients[i].name;
+        
+        }
         
     }
     
