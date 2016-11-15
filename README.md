@@ -6,4 +6,4 @@
 ## AES encrypted chat server using node.js, socket.io, and crypto-js
 
 1. Run server - node server.js
-2. Run client - https://secure-chat-benselj.c9.io/
+2. Run client - https://secure-chat-yourname.c9.io/
