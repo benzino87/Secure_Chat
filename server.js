@@ -116,7 +116,7 @@ io.on('connection', function(socket) {
         }
         else {
             
-            encryptAndBroadcastToAllClients(decryptedMsg);
+            encryptAndBroadcastToAllClients(socket, decryptedMsg);
 
         }
 
@@ -411,10 +411,21 @@ function decryptIncomingMessage(socket, message){
  * @param {message}: original message
  * 
  * */
-function encryptAndBroadcastToAllClients(message){
+function encryptAndBroadcastToAllClients(socket, message){
+    
+    senderName = "";
+    
+    for(var i in clients){
+        if(clients[i].socket.id === socket.id){
+            senderName = clients[i].name;
+        }
+    }
+    
+    var broadcastMessage = senderName + ': '+message
+    
     for(var pos in clients){
             
-            var encryptedMessage = CryptoJS.AES.encrypt(message, clients[pos].key);
+            var encryptedMessage = CryptoJS.AES.encrypt(broadcastMessage, clients[pos].key);
             
             console.log('ENCRYPTED: '+encryptedMessage.toString());
             console.log('CLIENT NAME: '+clients[pos].name);

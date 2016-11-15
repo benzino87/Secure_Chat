@@ -51,7 +51,7 @@
                 
                 var encryptedMsg = CryptoJS.AES.encrypt( $('#message').val(), privateKey); 
                 
-                console.log('Encrypted message: ' +encryptedMsg.toString());
+                console.log('Encrypted message(TO SERVER): ' +encryptedMsg.toString());
 
                 socket.emit('message to server', encryptedMsg.toString());
 
@@ -100,6 +100,8 @@
          * Listen for general chat broadcasts
          * */
         socket.on('broadcast', function(message) {
+            
+            console.log('Encrypted message(FROM SERVER): ' +message);
 
             var decrypted  = CryptoJS.AES.decrypt(message, privateKey);
         
@@ -113,6 +115,8 @@
          * Listen for whisper
          * */
         socket.on('whisper', function(message) {
+            
+            console.log('Encrypted message(FROM SERVER): ' +message);
             
             var decrypted  = CryptoJS.AES.decrypt(message, privateKey);
         
