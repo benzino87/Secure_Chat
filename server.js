@@ -413,7 +413,7 @@ function decryptIncomingMessage(socket, message){
  * */
 function encryptAndBroadcastToAllClients(socket, message){
     
-    senderName = "";
+    var senderName = "";
     
     for(var i in clients){
         if(clients[i].socket.id === socket.id){

@@ -51,7 +51,7 @@
                 
                 var encryptedMsg = CryptoJS.AES.encrypt( $('#message').val(), privateKey); 
                 
-                console.log('Encrypted message(TO SERVER): ' +encryptedMsg.toString());
+                console.log('Encrypted message(TO SERVER): ' + encryptedMsg.toString());
 
                 socket.emit('message to server', encryptedMsg.toString());
 
