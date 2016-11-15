@@ -53,7 +53,7 @@ body, #main, #chat-log{
 }
 #chat-form input[type=text]{
     margin: 0;
-    width: 90%;
+    width: 85%;
     border: 2px solid lime;
     border-radius: 0;
     background-color: black;

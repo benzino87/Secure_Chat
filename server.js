@@ -2,17 +2,28 @@ var express = require('express');
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io').listen(server);
-
-var path = require('path');
 var async = require('async');
+var path = require('path');
+
+var AES = require('crypto-js/aes');
+var SHA256 = require('crypto-js/sha256');
+
+console.log(SHA256("Message"));
+
+var CryptoJS = require("crypto-js");
+console.log(CryptoJS.HmacSHA1("Message", "Key"));
+
 
 //Define static content for app to use.
 app.use(express.static('client'));
 
+var publicKey = "";
 
 var clients = [];
 
 var count = 0;
+
+generateRandomKey();
 
 /**
  * 
@@ -46,6 +57,8 @@ io.on('connection', function(socket) {
 
     socket.on('client name', function(name) {
 
+        io.sockets.emit('publicKey', publicKey);
+
         handleNewClient(socket, name);
 
     });
@@ -56,22 +69,36 @@ io.on('connection', function(socket) {
         handleDisconnectedClient(socket);
 
     });
+    
+    socket.on('privateKey', function(key) {
+        
+        console.log(key);
+        
+        var decrypted  = CryptoJS.AES.decrypt(key, publicKey);
+        
+        var decryptedKey = decrypted.toString(CryptoJS.enc.Utf8);
+        
+        findClientAndAddPrivateKey(socket, decryptedKey);
+        
+    })
 
 
     /**
      * 
-     * Listens for incoming message from clients, broadcasts message to all clients
-     * 
-     * TODO: add whisper functionality
-     * 
+     * Listens for incoming message from clients, finds sender socket's private
+     * key translates and rebroadcasts to each individual client encrypted with 
+     * each clients private keybroadcasts message to all clients
+
      * */
 
     socket.on('message to server', function(message) {
         
+        var decryptedMsg = decryptIncomingMessage(socket, message);
+        
         var senderName = findSenderSocketInformation(socket);
         
         //Break apart message and check if its a whisper
-        var messageArr = message.split(" ", 2);
+        var messageArr = decryptedMsg.split(" ", 2);
         
         if(senderName === "admin" && messageArr[0] === '/r'){
             
@@ -81,18 +108,17 @@ io.on('connection', function(socket) {
 
         else if (messageArr[0] === '/w') {
 
-            findClientAndSendWhisper(socket, message, messageArr);
+            findClientAndSendWhisper(socket, decryptedMsg, messageArr);
 
         }
         else {
-
-            io.sockets.emit('broadcast', message);
+            
+            encryptAndBroadcastToAllClients(decryptedMsg);
 
         }
 
-        console.log('message from client: ' + message);
-
     });
+    
 
 });
 
@@ -183,7 +209,9 @@ function handleNewClient(socket, name) {
 
     console.log('Client name: ' + client.name + '\nID: ' + client.socket);
 
-    io.sockets.emit('broadcast', 'user connected');
+    io.sockets.emit('server message', 'user connected');
+    
+    io.sockets.socket(socket.id).emit('setName', name);
 
     updateUserList();
 
@@ -213,13 +241,17 @@ function findClientAndSendWhisper(senderSocket, message, messageArr) {
 
             var destinationId = clients[pos].socket.id;
 
-            var pos = message.indexOf(messageArr[1]);
+            var index = message.indexOf(messageArr[1]);
 
             var length = messageArr[1].length;
 
-            var trimmedMessage = message.substr(pos + length, message.length);
+            var trimmedMessage = message.substr(index + length, message.length);
+            
+            var reconstructedMessage = senderName + ": " + trimmedMessage;
+            
+            var encryptedMessage = CryptoJS.AES.encrypt(reconstructedMessage, clients[pos].key);
 
-            io.sockets.socket(destinationId).emit('whisper', senderName + ": " + trimmedMessage);
+            io.sockets.socket(destinationId).emit('whisper', encryptedMessage.toString());
             
             isFound = true;
 
@@ -289,4 +321,103 @@ function findAndRemoveClient(senderSocket, clientName){
         io.sockets.socket(senderSocket.id).emit('admin', 'No client exists with that name');
         
     }
+}
+
+/**
+ * Searches list of clients to find client key
+ * 
+ * @param {socket}: Socket from message source
+ * 
+ * */
+function getEncryptionKey(socket){
+    
+    for(var pos in clients){
+        
+        if(clients[pos].socket.id === socket.id){
+            
+            return clients[pos].key;
+            
+        }
+    }
+}
+
+/**
+ * Generates a random public key
+ * 
+ * */
+function generateRandomKey(){
+            var keySource = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a',
+                            'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+                            'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
+                            'x', 'y', 'z'];
+            
+            for(var i = 0; i < 100; i++){
+                
+                publicKey += keySource[Math.floor((Math.random() * 35) + 1)];
+                
+            }
+            
+            console.log('PUBLIC KEY: ' + publicKey);
+}
+
+/**
+ * Adds decrypted client private key to client object
+ * */
+function findClientAndAddPrivateKey(socket, key){
+    
+    for(var pos in clients){
+        
+        if(clients[pos].socket.id === socket.id){
+            
+            clients[pos].key = key;
+            
+            console.log(clients[pos]);
+        }
+    }
+}
+
+/**
+ * Finds client private key and decrypts incoming message
+ * 
+ * @param {socket}: sender socket
+ * 
+ * @param {message}: incoming encrypted message
+ * 
+ * */
+function decryptIncomingMessage(socket, message){
+     
+      for(var pos in clients){
+        
+        if(clients[pos].socket.id === socket.id){
+            
+            var decrypted  = CryptoJS.AES.decrypt(message, clients[pos].key);
+        
+            var decryptedMessage = decrypted.toString(CryptoJS.enc.Utf8);
+            
+            console.log('DECRYPTED: '+decryptedMessage);
+            
+        }
+    }
+     
+     return decryptedMessage;
+ }
+
+/**
+ * Re-encrypts the original message and and sends to each individual client
+ * 
+ * @param {message}: original message
+ * 
+ * */
+function encryptAndBroadcastToAllClients(message){
+    for(var pos in clients){
+            
+            var encryptedMessage = CryptoJS.AES.encrypt(message, clients[pos].key);
+            
+            console.log('ENCRYPTED: '+encryptedMessage.toString());
+            console.log('CLIENT NAME: '+clients[pos].name);
+            console.log('SOCKET ID: '+clients[pos].socket.id);
+            
+            io.sockets.socket(clients[pos].socket.id).emit('broadcast', encryptedMessage.toString());
+            
+            }
 }

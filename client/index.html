@@ -8,14 +8,19 @@
     <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/bower_components/crypto-js/crypto-js.js"></script>
     <script src="/js/bootstrap.min.js"></script>
     <script src="/js/jquery.min.js"></script>
     <!--<script src="/js/angular.min.js"></script>-->
-    <script>
-        //push this to a function that foces user to enter a name before creating
-        //the socket
+    <script async>
 
         var socket = io.connect();
+        
+        var publicKey = "";
+        
+        var privateKey = "";
+        
+        var name = "";
 
         $(window).load(function() {
             $('#main').hide();
@@ -43,8 +48,12 @@
          * */
         $(document).ready(function() {
             $('#chat-form').submit(function() {
+                
+                var encryptedMsg = CryptoJS.AES.encrypt( $('#message').val(), privateKey); 
+                
+                console.log('Encrypted message: ' +encryptedMsg.toString());
 
-                socket.emit('message to server', $('#message').val());
+                socket.emit('message to server', encryptedMsg.toString());
 
                 $('#message').val('');
 
@@ -53,14 +62,50 @@
             });
 
         });
+        
+        
+         /**
+         * Send server private encrypted private key
+         * */
+        socket.on('publicKey', function(message) {
 
+            publicKey = message;
+            
+            console.log('PUBLIC KEY: '+ publicKey);
+            
+            generateRandomKey();
+            
+            var encryptedKey = CryptoJS.AES.encrypt(privateKey, publicKey);
+            
+            console.log('Encrypted private key: '+encryptedKey.toString());
+            
+            socket.emit('privateKey', encryptedKey.toString());
+            
 
-        /**
+        });
+        
+         /**
+         * Get assigned name from server
+         * */
+        socket.on('setName', function(incomingName) {
+
+            name = incomingName;
+            
+            console.log('Assigned name: '+name);
+
+        });
+
+        
+         /**
          * Listen for general chat broadcasts
          * */
         socket.on('broadcast', function(message) {
 
-            $('#chat-dialog').append($('<li>').text(message));
+            var decrypted  = CryptoJS.AES.decrypt(message, privateKey);
+        
+            var decryptedMessage = decrypted.toString(CryptoJS.enc.Utf8);
+            
+            $('#chat-dialog').append($('<li>').text(decryptedMessage));
 
         });
 
@@ -68,8 +113,21 @@
          * Listen for whisper
          * */
         socket.on('whisper', function(message) {
+            
+            var decrypted  = CryptoJS.AES.decrypt(message, privateKey);
+        
+            var decryptedMessage = decrypted.toString(CryptoJS.enc.Utf8);
+            
+            $('#chat-dialog').append($('<li>').text(decryptedMessage).css('color', 'purple'));
 
-            $('#chat-dialog').append($('<li>').text(message).css('color', 'purple'));
+        });
+        
+         /**
+         * Listen for whisper
+         * */
+        socket.on('server message', function(message) {
+
+            $('#chat-dialog').append($('<li>').text(message).css('color', 'yellow'));
 
         });
 
@@ -86,7 +144,8 @@
 
             socket.disconnect();
 
-        })
+        });
+
 
         /**
          * Recieve updated user list from server
@@ -97,10 +156,22 @@
 
             var userList = users.split(',');
             for (var user in userList) {
-                console.log(userList[user]);
+                console.log('USER LIST: '+userList[user]);
                 $('#user-list').append($('<li>').text(userList[user]));
             }
         });
+        
+        function generateRandomKey(){
+            var keySource = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a',
+                            'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+                            'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
+                            'x', 'y', 'z'];
+            
+            for(var i = 0; i < 100; i++){
+                privateKey += keySource[Math.floor((Math.random() * 35) + 1)];
+            }
+            console.log('PRIVATE KEY: ' + privateKey);
+        }
     </script>
 </head>
 
@@ -131,12 +202,12 @@
 
         <div class="container-fluid" id="main">
             <h1>Secure Chat</h1>
-                <div class="span10">
+                <div class="span8">
                     <div class="row" id="chat-log-text-area">
                         <ul id="chat-dialog"></ul>
                     </div>
                     <div class="row" id="dialog-box">
-                        <div class="span10">
+                        <div class="span8">
                             <form id="chat-form">
                                 <input id='message' type="text" name="" />
                                 <input type="submit" value="Submit" />
@@ -144,7 +215,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="span4" id="users">
+                <div class="span3" id="users">
                     <h4>User List</h4>
                     <ul id="user-list"></ul>
                 </div>
